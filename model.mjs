@@ -1,4 +1,4 @@
-function Model(name) {
+export default function Model(gl,shProgram) {
     this.iVertexBuffer = gl.createBuffer();
     this.count = 0;
 

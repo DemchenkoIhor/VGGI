@@ -1,9 +1,16 @@
 'use strict';
+import Model from "./model.mjs";
+import TrackballRotator from "./Utils/trackball-rotator.mjs";
 
 let gl;                         // The webgl context.
 let surface;                    // A surface model
 let shProgram;                  // A shader program
 let spaceball;                  // A SimpleRotator object that lets the user rotate the view by mouse.
+
+let innerRadius = document.getElementById('innerRadius').value;
+let aParameter = document.getElementById('aParameter').value;  
+let teta = document.getElementById('teta').value;  
+let segmentsCount = document.getElementById('segmentsCount').value;  
 
 function deg2rad(angle) {
     return angle * Math.PI / 180;
@@ -72,7 +79,7 @@ function initGL() {
     shProgram.iModelViewProjectionMatrix = gl.getUniformLocation(prog, "ModelViewProjectionMatrix");
     shProgram.iColor                     = gl.getUniformLocation(prog, "color");
 
-    surface = new Model('Surface');
+    surface = new Model(gl, shProgram);
     surface.CreateSurfaceData();
 
     gl.enable(gl.DEPTH_TEST);
@@ -138,3 +145,10 @@ function init() {
 
     draw();
 }
+
+document.getElementById('innerRadius').addEventListener('change', update);
+document.getElementById('aParameter').addEventListener('change', update);
+document.getElementById('teta').addEventListener('change', update);
+document.getElementById('segmentsCount').addEventListener('change', update);
+
+document.addEventListener("DOMContentLoaded", init);

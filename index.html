@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 
-    <title>PA#1</title>
+    <title>PA#2</title>
     <style>
         body {
             background-color: #EEEEEE;
@@ -27,35 +27,35 @@
 
 </head>
 
-<body onload="init()">
+<body>
 
     <h2>Astroidal Torus with "Trackball" Mouse Rotation</h2>
     <div class="inputContainer">
         <p>Inner radius: </p>
-        <input type="number" name="innerRadius" id="innerRadius" min ="0.1" max="5" step="0.1" value="1" onchange="update()" >
+        <input type="number" name="innerRadius" id="innerRadius" min ="0.1" max="5" step="0.1" value="1"  >
     </div>
     <div class="inputContainer">
         <p>a parameter: </p>
-        <input type="number" name="aParameter" id="aParameter" min ="0.1" max="5" step="0.1" value="0.5" onchange="update()" >
+        <input type="number" name="aParameter" id="aParameter" min ="0.1" max="5" step="0.1" value="0.5"  >
     </div>
     <div class="inputContainer">
         <p>θ parameter: </p>
-        <input type="number" name="teta" id="teta" min ="0" max="1" step="0.05" value="0" onchange="update()" >
+        <input type="number" name="teta" id="teta" min ="0" max="1" step="0.05" value="0"  >
     </div>
     <div class="inputContainer">
         <p>Segments: </p>
-        <input type="number" name="segmentsCount" id="segmentsCount" min ="10" max="500" step="10" value="30" onchange="update()" >
+        <input type="number" name="segmentsCount" id="segmentsCount" min ="10" max="500" step="10" value="30" >
     </div>
 
     <div id="canvas-holder" style="position: relative">
         <canvas width="700" height="700" id="webglcanvas" style="background-color:red"></canvas>
     </div>
 
-    <script src="./Utils/trackball-rotator.js"></script>
+    <script defer type="module" src="./main.mjs"></script>
     <script src="./Utils/m4.js"></script>
     <script src="./shader.gpu"></script>
-    <script src="./main.js"></script>
-    <script src="./model.js"></script>
+    
+
 </body>
 
 </html>
