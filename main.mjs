@@ -21,12 +21,12 @@ function ShaderProgram(name, program) {
     this.name = name;
     this.prog = program;
 
-    // Location of the attribute variable in the shader program.
-    this.iAttribVertex = -1;
-    // Location of the uniform specifying a color for the primitive.
-    this.iColor = -1;
-    // Location of the uniform matrix representing the combined transformation.
-    this.iModelViewProjectionMatrix = -1;
+    // // Location of the attribute variable in the shader program.
+    // this.iAttribVertex = -1;
+    // // Location of the uniform specifying a color for the primitive.
+    // this.iColor = -1;
+    // // Location of the uniform matrix representing the combined transformation.
+    // this.iModelViewProjectionMatrix = -1;
 
     this.Use = function() {
         gl.useProgram(this.prog);
@@ -34,34 +34,71 @@ function ShaderProgram(name, program) {
 }
 
 
-/* Draws a colored cube, along with a set of coordinate axes.
- * (Note that the use of the above drawPrimitive function is not an efficient
- * way to draw with WebGL.  Here, the geometry is so simple that it doesn't matter.)
- */
-function draw() { 
+// function draw() { 
+//     gl.clearColor(0,0,0,1);
+//     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
+//     /* Set the values of the projection transformation */
+//     let projection = m4.perspective(Math.PI/8, 1, 8, 12); 
+    
+//     /* Get the view matrix from the SimpleRotator object.*/
+//     let modelView = spaceball.getViewMatrix();
+
+//     let rotateToPointZero = m4.axisRotation([0.707,0.707,0], 0.7);
+//     let translateToPointZero = m4.translation(0,0,-10);
+
+//     let matAccum0 = m4.multiply(rotateToPointZero, modelView);
+//     let matAccum1 = m4.multiply(translateToPointZero, matAccum0);
+        
+//     /* Multiply the projection matrix times the modelview matrix to give the
+//        combined transformation matrix, and send that to the shader program. */
+//     let modelViewProjection = m4.multiply(projection, matAccum1);
+
+//     gl.uniformMatrix4fv(shProgram.iModelViewProjectionMatrix, false, modelViewProjection);
+    
+//     /* Draw the six faces of a cube, with different colors. */
+//     gl.uniform4fv(shProgram.iColor, [1,1,0,1]);
+
+//     surface.Draw();
+// }
+
+function draw() {
     gl.clearColor(0,0,0,1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-    /* Set the values of the projection transformation */
-    let projection = m4.perspective(Math.PI/8, 1, 8, 12); 
-    
-    /* Get the view matrix from the SimpleRotator object.*/
-    let modelView = spaceball.getViewMatrix();
 
-    let rotateToPointZero = m4.axisRotation([0.707,0.707,0], 0.7);
-    let translateToPointZero = m4.translation(0,0,-10);
+    let lightPosition = [3.0, 0.0, 0.0]; // Position of the light source
+    let ambientColor = [0.3, 0.0, 0.0]; // Ambient light color
+    let diffuseColor = [1.0, 0.0, 0.0]; // Diffuse light color
+    let specularColor = [1.0, 1.0, 1.0]; // Specular light color
+    let viewerPosition = [0.0, 0.0, 5.0]; // Viewer position
 
-    let matAccum0 = m4.multiply(rotateToPointZero, modelView);
-    let matAccum1 = m4.multiply(translateToPointZero, matAccum0);
-        
-    /* Multiply the projection matrix times the modelview matrix to give the
-       combined transformation matrix, and send that to the shader program. */
-    let modelViewProjection = m4.multiply(projection, matAccum1);
 
-    gl.uniformMatrix4fv(shProgram.iModelViewProjectionMatrix, false, modelViewProjection);
+    const rotate = m4.axisRotation([0.707, 0.707, 0], 0.7);
+    const translate = m4.translation(0, 0, -5);
+
+    let modelViewMatrix = spaceball.getViewMatrix();    
+    modelViewMatrix = m4.multiply(rotate, modelViewMatrix);
+    modelViewMatrix = m4.multiply(translate, modelViewMatrix);
+
+    let projectionMatrix = m4.perspective(Math.PI / 4, 1, 0.1, 100);
+    let modelViewProjectionMatrix = m4.multiply(projectionMatrix, modelViewMatrix);
+    let normalMatrix = [
+        modelViewMatrix[0], modelViewMatrix[1], modelViewMatrix[2],
+        modelViewMatrix[4], modelViewMatrix[5], modelViewMatrix[6],
+        modelViewMatrix[8], modelViewMatrix[9], modelViewMatrix[10]
+    ];
+
+    gl.uniformMatrix4fv(shProgram.iModelViewProjectionMatrix, false, modelViewProjectionMatrix);
+    gl.uniformMatrix4fv(shProgram.iModelViewMatrix, false, modelViewMatrix);
+    gl.uniformMatrix3fv(shProgram.iNormalMatrix, false, normalMatrix);
     
-    /* Draw the six faces of a cube, with different colors. */
-    gl.uniform4fv(shProgram.iColor, [1,1,0,1]);
+    gl.uniform3fv(shProgram.iColor, [1.0, 0.0, 0.0]);
+    gl.uniform3fv(shProgram.iLightPosition, lightPosition);
+    gl.uniform3fv(shProgram.iAmbientColor, ambientColor);
+    gl.uniform3fv(shProgram.iDiffuseColor, diffuseColor);
+    gl.uniform3fv(shProgram.iSpecularColor, specularColor);
+    gl.uniform3fv(shProgram.iViewerPosition, viewerPosition);
+    
 
     surface.Draw();
 }
@@ -69,15 +106,40 @@ function draw() {
 
 
 /* Initialize the WebGL context. Called from init() */
-function initGL() {
-    let prog = createProgram( gl, vertexShaderSource, fragmentShaderSource);
+// function initGL() {
+//     let prog = createProgram( gl, vertexShaderSource, fragmentShaderSource);
 
-    shProgram = new ShaderProgram('Basic', prog);
+//     shProgram = new ShaderProgram('Basic', prog);
+//     shProgram.Use();
+
+//     shProgram.iAttribVertex              = gl.getAttribLocation(prog, "vertex");
+//     shProgram.iModelViewProjectionMatrix = gl.getUniformLocation(prog, "ModelViewProjectionMatrix");
+//     shProgram.iColor                     = gl.getUniformLocation(prog, "color");
+
+//     surface = new Model(gl, shProgram);
+//     surface.CreateSurfaceData();
+
+//     gl.enable(gl.DEPTH_TEST);
+// }
+
+
+function initGL() {
+    let prog = createProgram(gl, vertexShaderSource, fragmentShaderSource);
+
+    shProgram = new ShaderProgram('Phong', prog);
     shProgram.Use();
 
-    shProgram.iAttribVertex              = gl.getAttribLocation(prog, "vertex");
+    shProgram.iAttribVertex = gl.getAttribLocation(prog, "vertex");
+    shProgram.iAttribNormal = gl.getAttribLocation(prog, "normal");
     shProgram.iModelViewProjectionMatrix = gl.getUniformLocation(prog, "ModelViewProjectionMatrix");
-    shProgram.iColor                     = gl.getUniformLocation(prog, "color");
+    shProgram.iModelViewMatrix = gl.getUniformLocation(prog, "ModelViewMatrix");
+    shProgram.iNormalMatrix = gl.getUniformLocation(prog, "NormalMatrix");
+    shProgram.iLightPosition = gl.getUniformLocation(prog, "lightPosition");
+    shProgram.iColor = gl.getUniformLocation(prog, 'iColor');
+    shProgram.iAmbientColor = gl.getUniformLocation(prog, "ambientColor");
+    shProgram.iDiffuseColor = gl.getUniformLocation(prog, "diffuseColor");
+    shProgram.iSpecularColor = gl.getUniformLocation(prog, "specularColor");
+    shProgram.iViewerPosition = gl.getUniformLocation(prog, "viewerPosition");
 
     surface = new Model(gl, shProgram);
     surface.CreateSurfaceData();
@@ -93,13 +155,15 @@ function createProgram(gl, vShader, fShader) {
     gl.compileShader(vsh);
     if ( ! gl.getShaderParameter(vsh, gl.COMPILE_STATUS) ) {
         throw new Error("Error in vertex shader:  " + gl.getShaderInfoLog(vsh));
-     }
+    }
+    
     let fsh = gl.createShader( gl.FRAGMENT_SHADER );
     gl.shaderSource(fsh, fShader);
     gl.compileShader(fsh);
     if ( ! gl.getShaderParameter(fsh, gl.COMPILE_STATUS) ) {
        throw new Error("Error in fragment shader:  " + gl.getShaderInfoLog(fsh));
     }
+
     let prog = gl.createProgram();
     gl.attachShader(prog,vsh);
     gl.attachShader(prog, fsh);
