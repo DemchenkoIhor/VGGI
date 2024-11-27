@@ -30,62 +30,6 @@ export default function Model(gl,shProgram) {
     }
     
 
-    // this.Draw = function() {
-
-    //     gl.bindBuffer(gl.ARRAY_BUFFER, this.iVertexBuffer);
-    //     gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
-    //     gl.enableVertexAttribArray(shProgram.iAttribVertex);
-   
-    //     gl.drawArrays(gl.LINE_STRIP, 0, this.count);
-    // }
-
-    // this.CreateSurfaceData = function() {
-    //     let vertexGrid = [];
-    //     let a = parseFloat(document.getElementById('aParameter').value);       // Parameter 'a' for the torus
-    //     let r = parseFloat(document.getElementById('innerRadius').value);     // Torus radius
-    //     let uSegments = parseInt(document.getElementById('segmentsCount').value);  
-    //     let vSegments = parseInt(document.getElementById('segmentsCount').value); 
-    //     let theta = parseFloat(document.getElementById('teta').value) * Math.PI;     
-    
-    //     // Generate vertex grid based on u and v parameters
-    //     for (let i = 0; i <= uSegments; i++) {
-    //         let u = -Math.PI + (2 * Math.PI * i) / uSegments;
-    //         let x_u = a * Math.pow(Math.cos(u), 3);
-    //         let z_u = a * Math.pow(Math.sin(u), 3);
-            
-    //         let row = [];
-    //         for (let j = 0; j <= vSegments; j++) {
-    //             let v = (2 * Math.PI * j) / vSegments;
-    
-    //             let X = (r + x_u * Math.cos(theta) - z_u * Math.sin(theta)) * Math.cos(v);
-    //             let Y = (r + x_u * Math.cos(theta) - z_u * Math.sin(theta)) * Math.sin(v);
-    //             let Z = x_u * Math.sin(theta) + z_u * Math.cos(theta);
-    
-    //             row.push([X, Y, Z]);
-    //         }
-    //         vertexGrid.push(row);
-    //     }
-    
-    //     // Convert the vertex grid into a list of line segments
-    //     let vertexList = [];
-    //     for (let i = 0; i < uSegments; i++) {
-    //         for (let j = 0; j < vSegments; j++) {
-    //             // Connect points in the u-direction
-    //             let current = vertexGrid[i][j];
-    //             let nextU = vertexGrid[i + 1][j];
-    //             vertexList.push(...current, ...nextU);
-    
-    //             // Connect points in the v-direction
-    //             let nextV = vertexGrid[i][j + 1];
-    //             vertexList.push(...current, ...nextV);
-    //         }
-    //     }
-    
-    //     this.BufferData(vertexList);
-    // }
-    
-
-
     this.Draw = function() {
         gl.bindBuffer(gl.ARRAY_BUFFER, this.iVertexBuffer);
         gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
@@ -115,21 +59,7 @@ export default function Model(gl,shProgram) {
             normals.push(0, 0, 0);
         }
     
-        // Generate vertex positions
-        // for (let i = 0; i <= uSegments; i++) {
-        //     let u = -Math.PI + (2 * Math.PI * i)  / uSegments ;
-        //     let x_u = a * Math.pow(Math.cos(u), 3);
-        //     let z_u = a * Math.pow(Math.sin(u), 3);
-    
-        //     for (let j = 0; j <= vSegments; j++) {
-        //         let v = (2 * Math.PI * j) / vSegments;
-        //         let X = (r + x_u * Math.cos(theta) - z_u * Math.sin(theta)) * Math.cos(v);
-        //         let Y = (r + x_u * Math.cos(theta) - z_u * Math.sin(theta)) * Math.sin(v);
-        //         let Z = x_u * Math.sin(theta) + z_u * Math.cos(theta);
-    
-        //         vertices.push(X, Y, Z);
-        //     }
-        // }
+        
 
         for (let i = 0; i <= uSegments; i++) {
             let u = -Math.PI + (2 * Math.PI * i) / uSegments;
@@ -141,7 +71,7 @@ export default function Model(gl,shProgram) {
             let z_u = a * Math.pow(Math.sin(u), 3);
 
             for (let j = 0; j <= vSegments; j++) {
-                let v = (2 * Math.PI * j) / vSegments;
+                let v = ( 2 * Math.PI * j) / vSegments;
 
                 if (j === vSegments) v = 0; // Ensure vertex sharing at v-seam
 
@@ -152,19 +82,50 @@ export default function Model(gl,shProgram) {
                 vertices.push(X, Y, Z);
             }
         }
+    
 
-    
-        // Generate indices for triangles
-        for (let i = 0; i < uSegments; i++) {
-            for (let j = 0; j < vSegments; j++) {
+        // Generate indices for the main part of the torus
+        for (let i = 0; i < uSegments - 1; i++) {
+            for (let j = 0; j < vSegments - 1; j++) {
                 let current = i * (vSegments + 1) + j;
-                let next = current + vSegments + 1;
-    
-                indices.push(current, next, current + 1); // First triangle
-                indices.push(current + 1, next, next + 1); // Second triangle
+                let next = (i + 1) * (vSegments + 1) + j;
+
+                // Two triangles per cell
+                indices.push(current, next, current + 1);        // First triangle
+                indices.push(current + 1, next, next + 1);      // Second triangle
             }
         }
-    
+
+        // Handle the u-seam (connects last u-segment with the first)
+        for (let j = 0; j < vSegments - 1; j++) {
+            let current = (uSegments - 1) * (vSegments + 1) + j;
+            let next = j;  // Wraps around to the first row
+
+            indices.push(current, next, current + 1);        // First triangle
+            indices.push(current + 1, next, next + 1);      // Second triangle
+        }
+
+        // Handle the v-seam (connects last v-segment with the first)
+        for (let i = 0; i < uSegments - 1; i++) {
+            let current = i * (vSegments + 1) + (vSegments - 1);
+            let next = (i + 1) * (vSegments + 1) + (vSegments - 1);
+
+            // Connect the last column with the first column
+            indices.push(current, next, i * (vSegments + 1));        // First triangle
+            indices.push(i * (vSegments + 1), next, (i + 1) * (vSegments + 1));  // Second triangle
+        }
+
+        // Finally, handle the corner where both u and v wrap around
+        let last = (uSegments - 1) * (vSegments + 1) + (vSegments - 1);
+        let first = 0;
+
+        // Two triangles to close the final seam
+        indices.push(last, vSegments - 1, uSegments * (vSegments + 1) - 1);
+        indices.push(uSegments * (vSegments + 1) - 1, vSegments - 1, first);
+
+
+
+        
         // Calculate facet and vertex normals
         for (let i = 0; i < indices.length; i += 3) {
             let i1 = indices[i];
@@ -180,6 +141,7 @@ export default function Model(gl,shProgram) {
     
             let normal = cross(edge1, edge2);
             normalize(normal);
+            
     
             // Add the normal to each vertex of the triangle
             for (let idx of [i1, i2, i3]) {
@@ -205,12 +167,18 @@ export default function Model(gl,shProgram) {
         return [v2[0] - v1[0], v2[1] - v1[1], v2[2] - v1[2]];
     }
     
+    
     function normalize(v) {
         let length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-        if (length > 0.00001) {
-            return [v[0] / length, v[1] / length, v[2] / length];
+        if (length > 0.001) {
+            v[0] /= length;
+            v[1] /= length;
+            v[2] /= length;
+        } else {
+            v[0] = 0;
+            v[1] = 0;
+            v[2] = 0;
         }
-        return [0, 0, 0];
     }
     
     function cross(a, b) {

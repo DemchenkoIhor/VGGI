@@ -13,8 +13,6 @@ varying vec3 vNormal;    // Interpolated normal passed to fragment shader
 varying vec3 vPosition;  // Interpolated position passed to fragment shader
 
 void main() {
-    vec4 worldPosition = ModelViewMatrix * vec4(vertex, 1.0);
-    vPosition = worldPosition.xyz;
     vNormal = normalize(NormalMatrix * normal);
 
     gl_Position = ModelViewProjectionMatrix * vec4(vertex, 1.0);
