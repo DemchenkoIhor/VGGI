@@ -27,13 +27,6 @@ function ShaderProgram(name, program) {
     this.name = name;
     this.prog = program;
 
-    // // Location of the attribute variable in the shader program.
-    // this.iAttribVertex = -1;
-    // // Location of the uniform specifying a color for the primitive.
-    // this.iColor = -1;
-    // // Location of the uniform matrix representing the combined transformation.
-    // this.iModelViewProjectionMatrix = -1;
-
     this.Use = function() {
         gl.useProgram(this.prog);
     }
@@ -44,11 +37,7 @@ function draw() {
     gl.clearColor(0,0,0,1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    let ambientColor = [0.3, 0.0, 0.0]; // Ambient light color
-    let diffuseColor = [1.0, 0.0, 0.0]; // Diffuse light color
-    let specularColor = [1.0, 1.0, 1.0]; // Specular light color
     let viewerPosition = [0.0, 10.0, 10.0]; // Viewer position
-
 
     const rotate = m4.axisRotation([0.707, 0.707, 0], 0.7);
     const translate = m4.translation(0, 0, -5);
@@ -71,12 +60,10 @@ function draw() {
     
     gl.uniform3fv(shProgram.iColor, [1.0, 0.0, 0.0]);
     gl.uniform3fv(shProgram.iLightPosition, lightConfig.position);
-    gl.uniform3fv(shProgram.iAmbientColor, ambientColor);
-    gl.uniform3fv(shProgram.iDiffuseColor, diffuseColor);
-    gl.uniform3fv(shProgram.iSpecularColor, specularColor);
     gl.uniform3fv(shProgram.iViewerPosition, viewerPosition);
-    
-
+    gl.uniform1i(shProgram.iNormalTexture, 1);
+    gl.uniform1i(shProgram.iSpecularTexture, 2);
+        
     surface.Draw();
 }
 
@@ -89,15 +76,17 @@ function initGL() {
 
     shProgram.iAttribVertex = gl.getAttribLocation(prog, "vertex");
     shProgram.iAttribNormal = gl.getAttribLocation(prog, "normal");
+    shProgram.iAttribTangent = gl.getAttribLocation(prog, "tangent");
+    shProgram.iAttribUV = gl.getAttribLocation(prog, "uv");
     shProgram.iModelViewProjectionMatrix = gl.getUniformLocation(prog, "ModelViewProjectionMatrix");
     shProgram.iModelViewMatrix = gl.getUniformLocation(prog, "ModelViewMatrix");
     shProgram.iNormalMatrix = gl.getUniformLocation(prog, "NormalMatrix");
     shProgram.iLightPosition = gl.getUniformLocation(prog, "lightPosition");
     shProgram.iColor = gl.getUniformLocation(prog, 'iColor');
-    shProgram.iAmbientColor = gl.getUniformLocation(prog, "ambientColor");
-    shProgram.iDiffuseColor = gl.getUniformLocation(prog, "diffuseColor");
-    shProgram.iSpecularColor = gl.getUniformLocation(prog, "specularColor");
     shProgram.iViewerPosition = gl.getUniformLocation(prog, "viewerPosition");
+    shProgram.iDiffuseTexture = gl.getUniformLocation(prog, "diffuseTexture");
+    shProgram.iNormalTexture = gl.getUniformLocation(prog, "normalTexture");
+    shProgram.iSpecularTexture = gl.getUniformLocation(prog, 'specularTexture');
 
     surface = new Model(gl, shProgram);
     surface.CreateSurfaceData();
@@ -182,3 +171,5 @@ document.getElementById('teta').addEventListener('change', update);
 document.getElementById('segmentsCount').addEventListener('change', update);
 
 document.addEventListener("DOMContentLoaded", init);
+
+document.addEventListener('draw', draw);
