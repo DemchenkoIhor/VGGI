@@ -8,16 +8,31 @@ attribute vec2 uv;        // Vertex uv
 uniform mat4 ModelViewProjectionMatrix;  // Combined model-view-projection matrix
 uniform mat4 ModelViewMatrix;            // Model-view matrix
 uniform mat3 NormalMatrix;               // Normal matrix for transforming normals
+uniform vec2 Point;
+uniform float Angle;
 
 varying vec3 vTangent;   // Interpolated tangent passed to fragment shader
 varying vec3 vNormal;    // Interpolated normal passed to fragment shader
 varying vec3 vPosition;  // Interpolated position passed to fragment shader
 varying vec2 vUV;        // Interpolated uv passed to fragment shader
 
+vec2 calculateUV() {
+    vec2 result = uv - Point;
+    float cosTheta = cos(Angle);
+    float sinTheta = sin(Angle);
+
+    result = vec2(
+        result.x * cosTheta - result.y * sinTheta,
+        result.x * sinTheta + result.y * cosTheta
+    );
+
+    return result + Point;
+}
+
 void main() {
     vNormal = normalize(NormalMatrix * normal);
     vTangent = normalize(NormalMatrix * tangent);
-    vUV = uv;
+    vUV = calculateUV();
     
     vec4 worldSpacePosition = ModelViewMatrix * vec4(vertex, 1.0);
     vPosition = worldSpacePosition.xyz / worldSpacePosition.w;
@@ -47,14 +62,12 @@ vec3 getWorldSpaceNormal()
     vec3 normal = vNormal;
     vec3 tangent = vTangent;
 
-    //Normal orthogonalization
     normal = normalize(normal - dot(tangent, normal) * tangent);
 
     vec3 bitangent = cross(tangent, normal);
     vec3 normalMap = texture2D(normalTexture, vUV).rgb;
     normalMap = 2.0 * normalMap - vec3(1.0, 1.0, 1.0);
-    
-    //tangent priority 
+
     mat3 TBN = mat3(tangent, bitangent, normal);
     return normalize(TBN * normalMap);
 }

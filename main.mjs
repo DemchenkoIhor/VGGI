@@ -1,11 +1,13 @@
 'use strict';
 import Model from "./model.mjs";
 import TrackballRotator from "./Utils/trackball-rotator.mjs";
+import TexCoordDrawer from "./TexCoord.mjs"
 
 let gl;                         // The webgl context.
 let surface;                    // A surface model
 let shProgram;                  // A shader program
 let spaceball;                  // A SimpleRotator object that lets the user rotate the view by mouse.
+let uvDrawer;
 
 let innerRadius = document.getElementById('innerRadius').value;
 let aParameter = document.getElementById('aParameter').value;  
@@ -65,6 +67,9 @@ function draw() {
     gl.uniform1i(shProgram.iSpecularTexture, 2);
         
     surface.Draw();
+
+    if(uvDrawer !== undefined)
+        uvDrawer.draw();
 }
 
 
@@ -87,6 +92,8 @@ function initGL() {
     shProgram.iDiffuseTexture = gl.getUniformLocation(prog, "diffuseTexture");
     shProgram.iNormalTexture = gl.getUniformLocation(prog, "normalTexture");
     shProgram.iSpecularTexture = gl.getUniformLocation(prog, 'specularTexture');
+    shProgram.iPoint = gl.getUniformLocation(prog, "Point");
+    shProgram.iAngle = gl.getUniformLocation(prog, "Angle");
 
     surface = new Model(gl, shProgram);
     surface.CreateSurfaceData();
@@ -131,6 +138,7 @@ function updateLightPosition() {
 function update(){
     surface.CreateSurfaceData();
     updateLightPosition();
+    uvDrawer.update();
     draw();
 }
 
@@ -161,6 +169,8 @@ function init() {
     }
 
     spaceball = new TrackballRotator(canvas, draw, 0);
+    uvDrawer = new TexCoordDrawer(surface);
+    uvDrawer.init();
 
     draw();
 }
@@ -169,6 +179,7 @@ document.getElementById('innerRadius').addEventListener('change', update);
 document.getElementById('aParameter').addEventListener('change', update);
 document.getElementById('teta').addEventListener('change', update);
 document.getElementById('segmentsCount').addEventListener('change', update);
+document.getElementById('Angle').addEventListener('input', draw);
 
 document.addEventListener("DOMContentLoaded", init);
 

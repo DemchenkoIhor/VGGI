@@ -7,6 +7,10 @@ export default function Model(gl,shProgram) {
     this.idTextureDiffuse = LoadTexture(gl, "./textures/diffuse.jpg");
     this.idTextureNormal = LoadTexture(gl, "./textures/normal.jpg");
     this.idTextureSpecular = LoadTexture(gl, "./textures/specular.jpg");
+
+    this.point = [0.5, 0.5];
+    this.uvBuffer = [];
+    this.indexBuffer = [];
     this.count = 0;
 
     this.BufferData = function(vertices, uvs, normals, tangents, indices) {
@@ -32,6 +36,9 @@ export default function Model(gl,shProgram) {
     
         this.vertexCount = vertices.length / 3;
         this.indexCount = indices.length;
+
+        this.indexBuffer = indices;
+        this.uvBuffer = uvs;
     }
     
     this.Draw = function() {
@@ -62,6 +69,9 @@ export default function Model(gl,shProgram) {
         gl.activeTexture(gl.TEXTURE2);
         gl.bindTexture(gl.TEXTURE_2D, this.idTextureSpecular);
 
+        gl.uniform2fv(shProgram.iPoint, this.point);
+        gl.uniform1f(shProgram.iAngle, parseFloat(document.getElementById('Angle').value) * (Math.PI / 180.0));
+
         gl.drawElements(gl.TRIANGLES, this.indexCount, gl.UNSIGNED_SHORT, 0);
     }
     
@@ -85,13 +95,14 @@ export default function Model(gl,shProgram) {
         }
     
         for (let i = 0; i <= uSegments; i++) {
-            let u = -Math.PI + (2 * Math.PI * i) / uSegments; // Range: [-Pi : Pi]
+            let u = -Math.PI + (2 * Math.PI * i) / uSegments; // Range: [-Pi : Pi], need to normalize
+
 
             let x_u = a * Math.pow(Math.cos(u), 3);
             let z_u = a * Math.pow(Math.sin(u), 3);
 
             for (let j = 0; j <= vSegments; j++) {
-                let v = ( 2 * Math.PI * j) / vSegments; // Range: [0, 2 * Pi]
+                let v = ( 2 * Math.PI * j) / vSegments; // Range: [0, 2 * Pi], need to normalize
 
                 let X = (r + x_u * Math.cos(theta) - z_u * Math.sin(theta)) * Math.cos(v);
                 let Y = (r + x_u * Math.cos(theta) - z_u * Math.sin(theta)) * Math.sin(v);
@@ -102,7 +113,7 @@ export default function Model(gl,shProgram) {
             }
         }
     
-        // Generate indices for the torus
+        // Generate indices for the main part of the torus
         for (let i = 1; i <= uSegments; i++) {
             for (let j = 0; j < vSegments; j++) {
                 let current = (i - 1) * (vSegments + 1) + j;

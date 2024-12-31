@@ -16,7 +16,7 @@ function LoadTexture(gl, url)
     image.addEventListener('load', () => {
         // copy image to texture memory
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
         document.dispatchEvent(new Event('draw'));
     });
     return texture;
